@@ -1,17 +1,7 @@
 // Path
-global path_root "D:/GitHub/Kawaguchi-Toriyabe-PIAAC"
-global path_do "${path_root}/do-file"
-globa path_figure "${path_root}/figure"
-global path_table "${path_root}/table"
-global path_log "${path_root}/log"
-global path_draft "${path_root}/draft"
-
-global path_data "D:/Dropbox/PIAAC/Data/piaac_data_otheroutcomes.dta"
-
-// Specify the path to the German PIAAC SUF
-global path_german_suf ""
-
-global sed "C:/Program Files/Git/usr/bin/sed.exe"
+global path_do "${pwd}/do-file"
+global path_log "${pwd}/log"
+global path_data "${pwd}/data"
 
 // Module
 local file_list: dir "${path_do}/module" files "*.do", respectcase
@@ -26,14 +16,13 @@ global fig_w_html 600
 global fig_h_html 450
 
 graph set window fontface "Times New Roman"
-set scheme tt_color
+capture set scheme tt_color
 
 // Control variables in main analysis
-global inst1 "east"
-global inst2 "${inst1} pubsec ind3"
-global inst3 "${inst2} ccutil0_2 ntax200 equal_right right_parttime"
-global inst4 "${inst3} gender_role"
-global inst5 "${inst4} emp_protect3 union_density"
+global inst1 "east pubsec ind3"
+global inst2 "${inst1} ccutil0_2 ntax200 equal_right right_parttime"
+global inst3 "${inst2} gender_role"
+global inst4 "${inst3} emp_protect3 union_density"
 
 global xvars "educ age30_34 age35_39 age40_44 age45_49 age50_54 age55_59 nativelang imparent"
 

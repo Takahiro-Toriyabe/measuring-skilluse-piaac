@@ -1,5 +1,5 @@
 // Take log
-local dofile_name "var_germany"
+local dofile_name "clean_german_suf"
 TakeLog `dofile_name', path("${path_log}")
 
 // Clean German SUF

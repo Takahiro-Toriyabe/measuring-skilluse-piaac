@@ -425,3 +425,11 @@ vignettes/*.pdf
 
 # O*NET data
 /onet/db_26_1_excel/
+
+# Data
+/data/
+/data/data9.dta
+/data/check.dta
+/data/piaac_main.dta
+/data/isco08_2d.dta
+!/data/inst.dta

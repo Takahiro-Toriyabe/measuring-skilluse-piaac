@@ -1,66 +1,16 @@
- 
-/*
-	This do-file is originated from "cross_country_variable5.do" in the dropbox.
-	See that do-file when you find something wrong with this do-file.
-*/
- 
-clear all
-set more off
-log close _all
-
-local rawdir "F:/PIAAC"
-local outdir "C:/Users/takah/Dropbox/PIAAC/Data"
-
-local pardir1 "D:/GitHub/Kawaguchi-Toriyabe-PIAAC"
-
-local ndir = 1
-local maxdir = 100
-while 1 {
-	if ("`pardir`ndir''"~="") {
-		capture cd "`pardir`ndir''"
-		if (_rc==0) {
-			local pardir "`pardir`ndir''"
-			continue, break
-		}
-		else {
-			local ndir = `ndir' + 1
-		}
-	}
-	else {
-		local ndir = `ndir' + 1
-	}
-	if (`ndir'==`maxdir') {
-		xxx
-	}
-}
-
-local datadir "`pardir'/data"
-local logdir "`pardir'/log"
-local figdir "`pardir'/figure"
-local tabdir "`pardir'/table"
-local current_time = subinstr("`c(current_time)'", ":", "", 2)
-local autname "Takahiro Toriyabe"
-
-
-// Open log file
-
-local dofile_name "cross_country_variable"
-local current_time = subinstr("`c(current_time)'", ":", "", 2)
-
-capture mkdir "`logdir'/log_`c(current_date)'"
-log using "`logdir'/log_`c(current_date)'/`dofile_name'_`c(current_date)'_`current_time'.smcl", replace
-
+// Take log
+local dofile_name "clean_piaac"
+TakeLog `dofile_name', path("${path_log}")
 
 // Import data
-
 local cnt = 1
-
-foreach cntry in aut bel can cze dnk est fin fra irl ita jpn kor nld nor pol rus svk esp swe gbr usa cyp chl grc isr ltu nzl sgp svn tur {
+foreach cntry in aut bel can cze dnk est fin fra irl ita jpn kor nld nor pol rus ///
+		svk esp swe gbr usa cyp chl grc isr ltu nzl sgp svn tur {
 	if (`cnt'==9) {
 		local `cnt++'
 	}
 	
-	import delimited "`rawdir'/Data/Prg`cntry'p1.csv", clear
+	import delimited "${path_data}/Prg`cntry'p1.csv", clear
 
 	replace isic1c = "1" if (isic1c=="A")
 	replace isic1c = "2" if (isic1c=="B")
@@ -91,27 +41,20 @@ foreach cntry in aut bel can cze dnk est fin fra irl ita jpn kor nld nor pol rus
 
 	gen country = `cnt'
 		
-	save "`outdir'/data`cnt'.dta", replace
+	save "${path_data}/data`cnt'.dta", replace
 	
 	local `cnt++'
 }
 
-
-// Append Data
-
-use "`outdir'/data1.dta", clear
-
+clear
 forvalues j = 1(1)31 {
-	append using "`outdir'/data`j'.dta", force
+	append using "${path_data}/data`j'.dta"
 }
 
 gen id = _n
 
 replace isic1c = . if (inlist(isic1c, 9995, 9996, 9997, 9998, 9999)==1)
 replace isco1c = . if (inlist(isco1c, 9995, 9996, 9997, 9998, 9999)==1)
-
-save "`outdir'/piaac_data.dta", replace
-
 
 /*  Country ID
 	
@@ -150,28 +93,25 @@ save "`outdir'/piaac_data.dta", replace
 
 
 // Core test results
-
 gen core1_fail = 0
 replace core1_fail = 1 if (corestage1_pass==29)
-* = 1 if one failed to pass the first core stage
+// core1_fail = 1 if one failed to pass the first core stage
 
 gen core2_fail = 0
 replace core2_fail = 1 if (corestage2_pass==29)
-* = 1 if one failed to pass the second core stage
+// core2_fail = 1 if one failed to pass the second core stage
 
 gen papercore_fail = 0
 replace papercore_fail = 1 if (paper==3)
-* paper = 3 -> one fails paper core 
+// paper = 3 -> one fails paper core 
 
 rename h_q04a cmp_exp
 replace cmp_exp = 2 - cmp_exp
 replace cmp_exp = 1 if (g_q04==1)
-* cmp_exp = 1 if the respondent has experience to use a computer
-
+// cmp_exp = 1 if the respondent has experience to use a computer
 
 
 // Variables indicating whether one gave correct answer or not
-
 rename d311701s cl1
 rename c308120s cl2
 rename e321001s cl3
@@ -433,7 +373,6 @@ forvalues i = 1(1)20 {
 
 
 // Skill-Use Items
-
 rename f_q05a pswork1
 rename f_q05b pswork2
 
@@ -454,7 +393,7 @@ rename g_q03g numwork5
 rename g_q03h numwork6
 
 gen cmp_work = 2 - g_q04
-* cmp_work = 1 if one uses computer to work.
+// cmp_work = 1 if one uses computer to work.
 
 rename g_q05a ictwork1
 rename g_q05c ictwork2
@@ -468,9 +407,7 @@ forvalues i = 1(1)7 {
 	replace ictwork`i' = 1 if(cmp_work==0)
 }
 
-
 // Daily Skiil-Use 
-
 rename h_q01a readdaily1
 rename h_q01b readdaily2
 rename h_q01c readdaily3
@@ -499,9 +436,7 @@ forvalues i = 1(1)7 {
 	replace ictdaily`i' = 1 if (cmp_exp==0) | (h_q04b==2)
 }
 
-
 // Background Variables
-
 label define cntry 1 "Austria"
 label define cntry 2 "Belgium", add
 label define cntry 3 "Canada", add
@@ -680,8 +615,7 @@ forvalues i = 1(1)20 {
 replace pn_flag = 1 if (pn_flag_temp==20)
 drop pn_flag_temp
 
-* Skill-Use at Work
-
+// Skill-Use at Work
 gen readwork_flag = 0
 gen readwork_flag_temp = 0
 forvalues i = 1(1)8 {
@@ -706,8 +640,7 @@ forvalues i = 1(1)7 {
 replace ictwork_flag = 1 if (ictwork_flag_temp==7)
 drop ictwork_flag_temp
 
-* Skill-Use at Daily Life
-
+// Skill-Use at Daily Life
 gen readdaily_flag = 0
 gen readdaily_flag_temp = 0
 forvalues i = 1(1)8 {
@@ -734,7 +667,6 @@ drop ictdaily_flag_temp
 
 
 **** IRT (Estimation of skill indices)
-
 aorder
 
 foreach est in theta se {
@@ -781,7 +713,6 @@ foreach i of numlist 1(1)16 18(1)30 {
 	}
 }
 
-
 forvalues i = 17(1)17 {
 
 	irt 2pl cl1-cl48 if (country==`i')
@@ -813,7 +744,6 @@ forvalues i = 17(1)17 {
 		replace `v' = `v'_`i' if (country==`i')
 	}
 }
-
 
 forvalues i = 31(1)31 {
 
@@ -864,8 +794,7 @@ gen skill_ps = theta_ps if (theta_ps~=.)
 replace se_ps = . if (skill_ps==.)
 
 
-**** IRT (Estimation of skill-use indices)
-
+// IRT (Estimation of skill-use indices)
 aorder
 
 foreach var in skilluse se_skilluse skillusedaily se_skillusedaily {
@@ -967,8 +896,7 @@ foreach i in 27 30 {
 }
 
 
-**** Normalization
-
+// Normalization
 qui gen lit = .
 qui gen num = .
 qui gen ict = .
@@ -999,7 +927,6 @@ forvalues i = 1(1)31 {
 
 
 // Wage: Continuous Value
-
 gen wage = earnhr
 
 forvalues i = 1(1)31 {
@@ -1009,79 +936,7 @@ forvalues i = 1(1)31 {
 
 gen lwage = ln(wage)
 
-
-// Wage in Deciles
-
-gen wage_dcl = .
-gen wdecile = earnhrbonusdcl
-gen wage_flag = 1
-replace wage_flag = 0 if (inlist(country, 1, 3, 20, 22, 29, 31)==1)
-
-label define wage_flag 1 "continuous value" 0 "only decile", add
-label value wage_flag wage_flag
-
-for numlist 1/10: gen wdclX = .
-
-forvalues i = 1(1)31 {
-	_pctile wage if (country==`i'), nq(100)
-	replace wdcl1 = r(r5) if (country==`i')&(wage_flag==1)
-	replace wdcl2 = r(r15) if (country==`i')&(wage_flag==1)
-	replace wdcl3 = r(r25) if (country==`i')&(wage_flag==1)
-	replace wdcl4 = r(r35) if (country==`i')&(wage_flag==1)
-	replace wdcl5 = r(r45) if (country==`i')&(wage_flag==1)
-	replace wdcl6 = r(r55) if (country==`i')&(wage_flag==1)
-	replace wdcl7 = r(r65) if (country==`i')&(wage_flag==1)
-	replace wdcl8 = r(r75) if (country==`i')&(wage_flag==1)
-	replace wdcl9 = r(r85) if (country==`i')&(wage_flag==1)
-	replace wdcl10 = r(r95) if (country==`i')&(wage_flag==1)
-}
-
-forvalues i = 1(1)10 {
-	replace wage_dcl = wdcl`i' if (wdecile==`i')&(wage_flag==1)
-}
-
-replace wdcl1 = 9.85 if (country==3)
-replace wdcl2 = 11.00 if (country==3)
-replace wdcl3 = 13.75 if (country==3)
-replace wdcl4 = 16.00 if (country==3)
-replace wdcl5 = 18.68 if (country==3)
-replace wdcl6 = 21.20 if (country==3)
-replace wdcl7 = 24.90 if (country==3)
-replace wdcl8 = 29.00 if (country==3)
-replace wdcl9 = 35.00 if (country==3)
-replace wdcl10 = 46.15 if (country==3)
-
-save "`outdir'/piaac_data.dta", replace
-
-
-* Use wage data (CPS)
-
-cd "`outdir'"
-cd "../CPS"
-do "make_data.do"
-
-use "`outdir'/piaac_data.dta", clear
-
-replace wdcl1 = r(r5) if (country==22)
-replace wdcl2 = r(r15) if (country==22)
-replace wdcl3 = r(r25) if (country==22)
-replace wdcl4 = r(r35) if (country==22)
-replace wdcl5 = r(r45) if (country==22)
-replace wdcl6 = r(r55) if (country==22)
-replace wdcl7 = r(r65) if (country==22)
-replace wdcl8 = r(r75) if (country==22)
-replace wdcl9 = r(r85) if (country==22)
-replace wdcl10 = r(r95) if (country==22)
-
-forvalues i = 1(1)10 {
-	replace wage_dcl = wdcl`i' if (wdecile==`i')&(inlist(country,3,22)==1)
-}
-
-gen lwage_dcl = ln(wage_dcl)
-
-
 // Other Variables
-
 gen age60 = 0
 replace age60 = 1 if (age>=60 & age<1000)
 
@@ -1100,13 +955,7 @@ replace agegroup4 = 1 if (age60_65==1)
 gen female_chldrn = female * num_chldrn
 gen female_spouse = female * spouse
 
-merge m:1 country using "`dir'/index.dta", update replace
-drop _merge
-
-merge m:1 country using "`dir'/duncan.dta", update replace
-drop _merge
-
-gen spouse_regular = (j_q02c==1) if ((j_q02c~=.)
+gen spouse_regular = (j_q02c==1) if (j_q02c~=.)
 
 gen female_spreg = female * spouse_regular
 
@@ -1126,39 +975,9 @@ replace work_flag = 4 if (c_q08a==2)
 gen work = work_flag
 replace work = 0 if (inlist(work_flag, 2, 3, 4)==1)
 
-gen pubsec_temp = .
-replace pubsec_temp = 1 if (d_q03==2)
-replace pubsec_temp = 0 if (d_q03==1|d_q03==3)
-egen pubsec = mean(pubsec_temp), by(country)
-drop pubsec_temp
-
-gen pubseci = .
-replace pubseci = 1 if (d_q03==2)
-replace pubseci = 0 if (d_q03==1|d_q03==3)
-replace pubseci = 0 if (work==0)
-
-egen frac_selfemp = mean(selfemp), by(country)
-
-gen educm_temp = .
-replace educm_temp = 1 if (educ_mother==3)
-replace educm_temp = 0 if (educ_mother==1|educ_mother==2)
-	// Educational attainment of the mother
-
-gen educf_temp = .
-replace educf_temp = 1 if (educ_father==3)
-replace educf_temp = 0 if (educ_father==1|educ_father==2)
-	// Educational attainment of the father
-
-egen educm = mean(educm_temp), by(country)
-egen educf = mean(educf_temp), by(country)
-gen deduc = educf - educm
-drop educm_temp educf_temp educm educf
-
 gen drop_flag = 0
 replace drop_flag = 1 if (c_q07==4|c_q07==7)
 * We will exclude students and permanently disabled people from sample. 
-
-gen round2 = inlist(country24,31)
 
 drop country
 egen country = group(cntryid)
@@ -1194,135 +1013,16 @@ label define country 29 "Turkey", add
 label define country 30 "United Kingdom", add
 label define country 31 "United States", add
 label value country country
-
-merge m:1 country using "`dir'/issp_index.dta", update replace
-drop _merge
-
-gen east = inlist(country,6,8,18,22,23,25)
-
-gen ind1_temp = (isic1c==1) if (isic1c~=.)
-
-gen ind2_temp = inlist(isic1c,2,3,4,5,6) if (isic1c~=.)
-
-gen ind3i = 1 - (ind1_temp + ind2_temp)
-
-replace ind1_temp = 0 if (inlist(work_flag,2,3,4)==1)
-replace ind2_temp = 0 if (inlist(work_flag,2,3,4)==1)
-replace ind3i = 0 if (inlist(work_flag,2,3,4)==1)
-
-replace mhousework = 1 -mhousework
-	// Convert husband's share into wife's share
-
 	
 // Sample restriction
-
 qui drop if (inlist(1,age16_19,age20_24,age60_65)==1)
 qui drop if (country==23)
 qui drop if (drop_flag==1)
 capture qui tab country, gen(cfe)
 
-save "`outdir'/piaac_data.dta", replace
-
-
-// Import parental leave database
-
-import excel "`pardir'/parental_leave/plv_database_toriyabe.xlsx", sheet("Sheet1") cellrange(B1:J31) firstrow
-
-gen tot_protect = mlv_protect + plv_protect
-gen tot_paid = mlv_paid + plv_paid
-gen tot_equiv = mlv_equiv + plv_equiv
-	
-save "`outdir'/plv_data_temp.dta", replace
-
-use "`outdir'/piaac_data.dta", clear
-
-foreach type in mlv plv {
-	foreach tag in _protect _paid _equiv {
-		capture drop `type'`tag'
-	}
-}
-
-capture drop tot_protect
-capture drop tot_paid
-capture drop tot_equiv
-
-merge m:1 country using "`outdir'/plv_data_temp.dta"
-tab _merge
-drop _merge
-
-erase "`outdir'/plv_data_temp.dta"
-
-save "`outdir'/piaac_data.dta", replace
-
-preserve
-	collapse (mean) mlv_week2011 tot_paid, by(country)
-	tabstat mlv_week2011 tot_paid, by(country)
-	twoway (scatter mlv_week2011 tot_paid, mcolor(gs5)) (function y=x, range(0 180) lcolor(gs5)), ///
-		scheme(s1mono) legend(label (2 "45-degree line") order(2) position(5) ring(0)) ///
-		xtitle("Our database") ytitle("OECD database") title("Duration of paid leaves") ///
-		ylabel(0(20)180, angle(0) grid glpattern(shortdash) glcolor(gs13)) ///
-		xlabel(0(20)180, grid glpattern(shortdash) glcolor(gs13)) ///
-		saving("`figdir'/gph/database_check.gph", replace)
-		
-	graph export "`figdir'/pdf/database_check.pdf", as(pdf) replace
-restore
-
-
-// Import data of childcare utilization rates under 0-2
-
-import excel "`outdir'/childcare_util0_2.xlsx", sheet("Sheet1") firstrow
-destring _all, replace force
-
-forvalues year = 1995(1)2015 {
-	replace childcare0_2_`year' = childcare0_2_`year'/100
-}
-
-save "`outdir'/ccutil0_2.dta", replace
-
-use "`outdir'/piaac_data.dta", clear
-
-capture drop _merge
-merge m:1 country using "`outdir'/ccutil0_2.dta", update replace
-drop _merge
-erase "`outdir'/ccutil0_2.dta"
-
-capture drop ccutil0_2
-gen ccutil0_2 = childcare0_2_2011
-replace ccutil0_2 = childcare0_2_2012 if (round2==1)
-replace ccutil0_2 = childcare0_2_2011 if (country==4)
-	// Chile is a round 2 country, but we do not have childcare utilization rate in 2012 while we have the rate in 2011
-
-save "`outdir'/piaac_data.dta", replace
-
-
-// Import data of tax system
-
-import excel "`outdir'/tax_system_source.xlsx", sheet("Sheet1") firstrow
-destring _all, replace force
-
-forvalues i = 2001(1)2014 {
-	replace ntax200_`i' = ntax200_`i' / 100
-}
-
-save "`outdir'/tax_system.dta", replace
-
-use "`outdir'/piaac_data.dta", clear
-
-capture drop _merge
-merge m:1 country using "`outdir'/tax_system.dta"
-drop _merge
-erase "`outdir'/tax_system.dta"
-
-save "`outdir'/piaac_data.dta", replace
-
-
 // Other outcomes regarding  skill use at work place
 
-use "`outdir'/piaac_data.dta", clear
-
-
-**** Clean Germany data
-
+// Clean Germany data
 foreach i in 11 12 13 {
 	foreach j in A B C D E F G {
 		local k = strlower("`j'")
@@ -1346,11 +1046,9 @@ foreach i in 2 {
 
 sum d_q1?? f_q0?? g_q02? if (country==11)
 
+// Make variables to use IRT
 
-**** Make variables to use IRT
-
-* Task discretion at work
-
+// Task discretion at work
 local num = 1
 foreach j in a b c d {
 	gen q_taskdisc`num' = d_q11`j'
@@ -1365,8 +1063,7 @@ forvalues i = 1(1)4 {
 replace taskdisc_flag = 1 if (taskdisc_flag_temp==4)
 drop taskdisc_flag_temp
 
-* Learning at work
-
+// Learning at work
 local num = 1
 foreach j in a b c {
 	gen q_learning`num' = d_q13`j'
@@ -1381,8 +1078,7 @@ forvalues i = 1(1)3 {
 replace learning_flag = 1 if (learning_flag_temp==3)
 drop learning_flag_temp
 
-* Influence at work
-
+// Influence at work
 gen q_influence1 = f_q02b
 gen q_influence2 = f_q02c
 gen q_influence3 = f_q02e
@@ -1398,8 +1094,7 @@ forvalues i = 1(1)6 {
 replace influence_flag = 1 if (influence_flag_temp==6)
 drop influence_flag_temp
 
-* Writing skill at work
-
+// Writing skill at work
 local num = 1
 foreach j in a b c d {
 	gen q_workwrite`num' = g_q02`j'
@@ -1414,17 +1109,14 @@ forvalues i = 1(1)4 {
 replace workwrite_flag = 1 if (workwrite_flag_temp==4)
 drop workwrite_flag_temp
 
-* Subjective skill-use measure
-
+// Subjective skill-use measure
 local num = 1
 foreach j in a b c {
 	gen q_sbjctv_skilluse`num' = d_q12`j'
 	local num = `num' + 1
 }
 
-
-**** Make IRT scores
-
+// Make IRT scores
 local ntaskdisc = 4
 local nlearning = 3
 local ninfluence = 6
@@ -1453,35 +1145,22 @@ forvalues i = 1(1)31 {
 	display ""
 }
 
-
 // Check the correlation with the imputed variables in PIAAC
- 
 corr taskdisc irt_taskdisc
 corr learnatwork irt_learning
 corr influence irt_influence
 corr writwork irt_workwrite
 
-
 // 4-digit occupation label
-
-do "`pardir'/do-file/label_occup4digit.do"
+do "${path_do}/common/label_occup4digit.do"
 
 // Occupation of the low skilled by gender
-
 tab isco08_c if (work==1)&(female==0)&(lit<-1), sort
 tab isco08_c if (work==1)&(female==1)&(lit<-1), sort
 
 
-// Merge part-time right data
-
-capture drop _merge
-merge m:1 cntryid using "D:/GitHub/Kawaguchi-Toriyabe-PIAAC/data/parttime_right.dta"
-
-count if _merge == 1
-assert r(N) == 0
-
-drop _merge
-
-save "`outdir'/piaac_data_otheroutcomes.dta", replace
+// Merge country-level data
+merge m:1 cntryid using "${path_data}/inst.dta", keep(3) nogen
+save "${path_data}/piaac_main.dta", replace
 
 log close
