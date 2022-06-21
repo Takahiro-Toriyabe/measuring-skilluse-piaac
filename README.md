@@ -39,4 +39,4 @@ Then, `measuring-skilluse-piaac/do-file/main.do` automatically runs all subseque
 
 ## Contact
 
-If you have any problems in running the code, please create a new issue from [this page](https://github.com/Takahiro-Toriyabe/measuring-skilluse-piaac).
+If you have any problems in running the code, please create a new issue from [this page](https://github.com/Takahiro-Toriyabe/measuring-skilluse-piaac/issues).
