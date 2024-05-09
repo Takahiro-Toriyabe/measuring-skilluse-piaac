@@ -107,7 +107,6 @@ foreach skill in lit num {
 
 // Table 5
 use "${path_data}/piaac_main.dta", clear
-merge 1:1 cntryid seqid using "${path_data}/check.dta", replace update nogen assert(1 3 4)
 do "${path_do}/common/InitialSetting.do"
 
 * Subjective skill-use measure

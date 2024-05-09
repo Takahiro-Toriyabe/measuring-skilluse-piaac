@@ -670,7 +670,7 @@ drop ictdaily_flag_temp
 aorder
 
 foreach est in theta se {
-	foreach tag in _cl _cn _ps_pl _pn {
+	foreach tag in _cl _cn _ps _pl _pn {
 		gen `est'`tag' = .
 	}
 }
@@ -687,7 +687,7 @@ foreach i of numlist 1(1)16 18(1)30 {
 	replace theta_cn_`i' = . if (cn_flag==1)
 	replace se_cn_`i' = . if (cn_flag==1)
 
-	if (inlist(`i',8,13,19,23)==0) {
+	if (inlist(`i',8,11,19,23)==0) {
 		irt gpcm ps1-ps14 if (country==`i') 
 		predict theta_ps_`i', latent se(se_ps_`i')
 		replace theta_ps_`i' = . if (ps_flag==1)
